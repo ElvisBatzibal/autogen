@@ -71,36 +71,8 @@ async def form_post(
     except Exception as e:
         print(f"❌ No se pudo conectar al trigger: {e}")
 
-    # Obtener la respuesta más reciente
-    async with httpx.AsyncClient() as client:
-        query = (
-                f"{SUPABASE_URL}/rest/v1/messages"
-                f"?customer_id=eq.{customer_id}"
-                f"&message=eq.{message}"
-                f"&select=response"
-                f"&order=created_at.desc"
-                f"&limit=1"
-            )
-        resp = await client.get(query, headers=headers)
-
-        try:
-            data = resp.json()
-        except Exception as e:
-            return templates.TemplateResponse("respuesta.html", {
-                "request": request,
-                "respuesta": "❌ No se pudo interpretar la respuesta del servidor."
-            })
-
-        if not isinstance(data, list) or not data:
-            return templates.TemplateResponse("respuesta.html", {
-                "request": request,
-                "respuesta": "❌ Hubo un error al procesar tu mensaje. Intenta nuevamente más tarde."
-            })
-
-        return templates.TemplateResponse("respuesta.html", {
-            "request": request,
-            "respuesta": data[0].get("respuesta", "❓ Sin respuesta generada.")
-        })
+    # Redireccionar al frontend para que haga polling por la respuesta
+    return RedirectResponse(url=f"/respuesta.html?id={message_id}", status_code=303)
 
 @app.get("/respuesta")
 async def obtener_respuesta(message_id: str):
