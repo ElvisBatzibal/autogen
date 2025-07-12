@@ -1,24 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Formulario de Contacto</title>
+  <meta charset="UTF-8">
+  <title>Formulario de Atención al Cliente</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background: #ffffff;
+      padding: 2rem 3rem;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #444;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    input[type="submit"] {
+      background-color: #007bff;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 600px) {
+      .form-container {
+        padding: 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h2>Formulario de Atención al Cliente</h2>
-  <form method="POST">
-    <label>Nombre:</label><br>
-    <input type="text" name="name" required><br>
+  <div class="form-container">
+    <h2>Formulario de Atención al Cliente</h2>
+    <form method="POST">
+      <label for="name">Nombre:</label>
+      <input type="text" id="name" name="name" required>
 
-    <label>Correo:</label><br>
-    <input type="email" name="email" required><br>
+      <label for="email">Correo:</label>
+      <input type="email" id="email" name="email" required>
 
-    <label>Teléfono:</label><br>
-    <input type="text" name="phone" required><br>
+      <label for="phone">Teléfono:</label>
+      <input type="text" id="phone" name="phone" required>
 
-    <label>Mensaje:</label><br>
-    <textarea name="message" rows="5" required></textarea><br>
+      <label for="message">Mensaje:</label>
+      <textarea id="message" name="message" rows="5" required></textarea>
 
-    <input type="submit" value="Enviar">
-  </form>
+      <input type="submit" value="Enviar">
+    </form>
+  </div>
 </body>
 </html>

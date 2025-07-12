@@ -5,9 +5,6 @@ import httpx
 import os
 from dotenv import load_dotenv
 import uuid
-from classify.classify_messages import run_classification_process
-from orders.agent_orders import run_order_agent_process
-from response.agent_responses import run_response_agent_process
 
 load_dotenv()
 
@@ -52,7 +49,9 @@ async def form_post(
             })
 
         # Guardar mensaje
+        message_id = str(uuid.uuid4())
         await client.post(f"{SUPABASE_URL}/rest/v1/messages", headers=headers, json={
+            "id": message_id,
             "customer_id": customer_id,
             "channel": "Web",
             "message": message
@@ -61,7 +60,10 @@ async def form_post(
     # Ejecutar flujo completo desde trigger_autogen
     try:
         async with httpx.AsyncClient() as client:
-            trigger_response = await client.post("http://localhost:8001/run-agents")
+            print("Conectando con el trigger de Autogen...")
+            trigger_response = await client.post("http://localhost:8001/run-agents", json={"message_id": message_id})
+            print("🚀 Ejecutando flujo Autogen...")
+            print(f"Respuesta del trigger: {trigger_response.text}")
             if trigger_response.status_code == 200:
                 print("✅ Flujo Autogen ejecutado correctamente")
             else:
@@ -71,9 +73,31 @@ async def form_post(
 
     # Obtener la respuesta más reciente
     async with httpx.AsyncClient() as client:
-        resp = await client.get(
-            f"{SUPABASE_URL}/rest/v1/messages?select=message,response&order=created_at.desc&limit=1",
-            headers=headers
-        )
-        data = resp.json()
-        return templates.TemplateResponse("respuesta.html", {"request": request, "data": data[0]})
+        query = (
+                f"{SUPABASE_URL}/rest/v1/messages"
+                f"?customer_id=eq.{customer_id}"
+                f"&message=eq.{message}"
+                f"&select=response"
+                f"&order=created_at.desc"
+                f"&limit=1"
+            )
+        resp = await client.get(query, headers=headers)
+
+        try:
+            data = resp.json()
+        except Exception as e:
+            return templates.TemplateResponse("respuesta.html", {
+                "request": request,
+                "respuesta": "❌ No se pudo interpretar la respuesta del servidor."
+            })
+
+        if not isinstance(data, list) or not data:
+            return templates.TemplateResponse("respuesta.html", {
+                "request": request,
+                "respuesta": "❌ Hubo un error al procesar tu mensaje. Intenta nuevamente más tarde."
+            })
+
+        return templates.TemplateResponse("respuesta.html", {
+            "request": request,
+            "respuesta": data[0].get("respuesta", "❓ Sin respuesta generada.")
+        })
