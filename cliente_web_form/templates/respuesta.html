@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -49,8 +47,26 @@
 <body>
     <div class="container">
         <h1>💬 Respuesta Generada</h1>
-        <div class="respuesta">{{ respuesta }}</div>
+        <div id="respuesta" class="respuesta">⏳ Esperando la respuesta del asistente...</div>
         <a href="/" class="volver">← Enviar otro mensaje</a>
     </div>
 </body>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const messageId = params.get("id");
+  const respuestaDiv = document.getElementById("respuesta");
+
+  async function fetchRespuesta() {
+      const res = await fetch(`/respuesta-json?id=${messageId}`);
+      if (res.ok) {
+          const data = await res.json();
+          if (data && data.respuesta && !respuestaDiv.dataset.responded) {
+              respuestaDiv.textContent = data.respuesta;
+              respuestaDiv.dataset.responded = "true";
+          }
+      }
+  }
+
+  setInterval(fetchRespuesta, 2000);
+</script>
 </html>
