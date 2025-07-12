@@ -22,7 +22,7 @@ headers = {
 
 @app.get("/", response_class=HTMLResponse)
 async def form_get(request: Request):
-    return templates.TemplateResponse("form.html", {"request": request})
+    return templates.TemplateResponse("form.html", {"request": request, "respuesta": ""})
 
 @app.post("/", response_class=HTMLResponse)
 async def form_post(
@@ -63,7 +63,7 @@ async def form_post(
             print("Conectando con el trigger de Autogen...")
             trigger_response = await client.post("http://localhost:8001/run-agents", json={"message_id": message_id})
             print("🚀 Ejecutando flujo Autogen...")
-            print(f"Respuesta del trigger: {trigger_response.text}")
+            print(f"Respuesta del trigger: {trigger_response}")
             if trigger_response.status_code == 200:
                 print("✅ Flujo Autogen ejecutado correctamente")
             else:
@@ -71,8 +71,12 @@ async def form_post(
     except Exception as e:
         print(f"❌ No se pudo conectar al trigger: {e}")
 
-    # Redireccionar al frontend para que haga polling por la respuesta
-    return RedirectResponse(url=f"/respuesta.html?id={message_id}", status_code=303)
+    # Retornar el template con message_id para polling
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "respuesta": "",
+        "message_id": message_id
+    })
 
 @app.get("/respuesta")
 async def obtener_respuesta(message_id: str):
