@@ -37,13 +37,17 @@ async def save_analytics(summary_date: str, intent_summary: dict):
             }
         )
 
-async def main():
+async def generate_analytics_summary():
     intents = await fetch_all_intents()
     counts = dict(Counter(intents))
     print(f"📊 Resumen de intenciones del día: {counts}")
 
     today = datetime.now(timezone.utc).date().isoformat()
     await save_analytics(today, counts)
+    return counts
+
+async def main():
+    await generate_analytics_summary()
 
 if __name__ == "__main__":
     import asyncio

@@ -87,7 +87,7 @@ async def save_response(message_id: str, response_text: str):
             }
         )
 
-async def main():
+async def run_response_agent_process():
     messages = await fetch_messages_without_response()
     print(f"💬 Mensajes sin respuesta: {len(messages)}")
 
@@ -109,6 +109,9 @@ async def main():
         print(f"✅ Respuesta generada:\n{response_text}\n")
 
         await save_response(msg["id"], response_text)
+
+async def main():
+    await run_response_agent_process()
 
 if __name__ == "__main__":
     import asyncio

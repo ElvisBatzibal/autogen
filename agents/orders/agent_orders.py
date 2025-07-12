@@ -58,7 +58,7 @@ async def log_processing(message_id: str, status: str, detail: str = ""):
             }
         )
 
-async def main():
+async def run_order_agent_process():
     messages = await fetch_messages_to_process()
     print(f"📬 Mensajes para procesar: {len(messages)}")
 
@@ -97,6 +97,9 @@ async def main():
             )
 
         await mark_as_processed(msg["id"])
+
+async def main():
+    await run_order_agent_process()
 
 if __name__ == "__main__":
     import asyncio

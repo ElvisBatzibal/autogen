@@ -55,7 +55,7 @@ async def update_intent(message_id: str, intent: str):
             json={"intent": intent}
         )
 
-async def main():
+async def run_classification_process():
     messages = await fetch_unclassified_messages()
     print(f"📝 Mensajes sin clasificar: {len(messages)}")
 
@@ -64,6 +64,9 @@ async def main():
         print(f"🔍 Mensaje: {msg['message']}")
         print(f"✅ Intención detectada: {intent}")
         await update_intent(msg["id"], intent)
+
+async def main():
+    await run_classification_process()
 
 if __name__ == "__main__":
     import asyncio
