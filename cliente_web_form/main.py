@@ -24,14 +24,17 @@ headers = {
 async def form_get(request: Request):
     return templates.TemplateResponse("form.html", {"request": request, "respuesta": ""})
 
-@app.post("/", response_class=HTMLResponse)
-async def form_post(
-    request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    message: str = Form(...)
-):
+@app.post("/")
+async def form_post(request: Request):
+    try:
+        payload = await request.json()
+        name = payload.get("name")
+        email = payload.get("email")
+        phone = payload.get("phone")
+        message = payload.get("message")
+    except Exception:
+        return JSONResponse(status_code=400, content={"status": "error", "message": "JSON inválido"})
+
     async with httpx.AsyncClient() as client:
         # Buscar cliente
         resp = await client.get(f"{SUPABASE_URL}/rest/v1/customers?email=eq.{email}", headers=headers)
@@ -62,21 +65,14 @@ async def form_post(
         async with httpx.AsyncClient() as client:
             print("Conectando con el trigger de Autogen...")
             trigger_response = await client.post("http://localhost:8001/run-agents", json={"message_id": message_id})
-            print("🚀 Ejecutando flujo Autogen...")
-            print(f"Respuesta del trigger: {trigger_response}")
             if trigger_response.status_code == 200:
                 print("✅ Flujo Autogen ejecutado correctamente")
             else:
-                print(f"⚠️ Error al ejecutar Autogen: {trigger_response.text}")
+                print(f"⚠️ Error al ejecutar Autogen: {trigger_response.status_code} - {trigger_response.text}")
     except Exception as e:
         print(f"❌ No se pudo conectar al trigger: {e}")
 
-    # Retornar el template con message_id para polling
-    return templates.TemplateResponse("form.html", {
-        "request": request,
-        "respuesta": "",
-        "message_id": message_id
-    })
+    return JSONResponse(status_code=200, content={"status": "success", "message_id": message_id})
 
 @app.get("/respuesta")
 async def obtener_respuesta(message_id: str):
@@ -89,6 +85,7 @@ async def obtener_respuesta(message_id: str):
         resp = await client.get(query, headers=headers)
         try:
             data = resp.json()
+            print(f"Datos obtenidos: {data}")
         except Exception:
             return JSONResponse(status_code=500, content={"status": "error", "message": "Respuesta no válida"})
 

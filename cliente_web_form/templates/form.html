@@ -75,8 +75,8 @@
   <div class="form-container">
     <h2>Formulario de Atención al Cliente</h2>
     <div class="row" style="display: flex; gap: 2rem;">
-      <div class="col" style="flex: 1;">
-        <form method="POST">
+      <div class="col-lg-6" style="flex: 1;">
+        <form id="cliente-form">
           <label for="name">Nombre:</label>
           <input type="text" id="name" name="name" required>
 
@@ -92,7 +92,7 @@
           <input type="submit" value="Enviar">
         </form>
       </div>
-      <div class="col" style="flex: 1;" id="respuesta-container">
+      <div class="col-lg-6" style="flex: 1;" id="respuesta-container">
         <h3>Respuesta:</h3>
         <p id="respuesta">Esperando respuesta...</p>
       </div>
@@ -100,8 +100,59 @@
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const messageId = urlParams.get('id');
+    const form = document.getElementById("cliente-form");
+    const respuestaElem = document.getElementById("respuesta");
+    let messageId = null;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const phone = form.phone.value.trim();
+      const message = form.message.value.trim();
+
+      if (!name || !email || !phone || !message) {
+        respuestaElem.textContent = "❌ Todos los campos son obligatorios.";
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        respuestaElem.textContent = "❌ El correo electrónico no es válido.";
+        return;
+      }
+
+      const payload = { name, email, phone, message };
+
+      respuestaElem.textContent = "Procesando mensaje...";
+
+      try {
+        const res = await fetch("/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.message_id) {
+            messageId = data.message_id;
+            form.reset();
+            fetchRespuesta();
+          } else {
+            respuestaElem.textContent = "❌ No se recibió un ID de mensaje válido.";
+          }
+        } else {
+          respuestaElem.textContent = "❌ Error al enviar el formulario.";
+        }
+      } catch (error) {
+        console.error(error);
+        respuestaElem.textContent = "❌ Error de red al enviar.";
+      }
+    });
 
     async function fetchRespuesta() {
       if (!messageId) return;
@@ -110,8 +161,8 @@
         const res = await fetch(`/respuesta-json?id=${messageId}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.respuesta && data.respuesta !== '❓ Sin respuesta generada.') {
-            document.getElementById('respuesta').textContent = data.respuesta;
+          if (data.respuesta && data.respuesta !== "❓ Sin respuesta generada.") {
+            respuestaElem.textContent = data.respuesta;
           } else {
             setTimeout(fetchRespuesta, 2000);
           }
@@ -123,8 +174,6 @@
         setTimeout(fetchRespuesta, 2000);
       }
     }
-
-    fetchRespuesta();
   </script>
 </body>
 </html>
