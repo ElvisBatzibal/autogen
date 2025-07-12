@@ -158,7 +158,7 @@
       if (!messageId) return;
 
       try {
-        const res = await fetch(`/respuesta-json?id=${messageId}`);
+        const res = await fetch(`/respuesta?message_id=${messageId}`);
         if (res.ok) {
           const data = await res.json();
           if (data.respuesta && data.respuesta !== "❓ Sin respuesta generada.") {

@@ -78,9 +78,9 @@ async def form_post(request: Request):
 async def obtener_respuesta(message_id: str):
     async with httpx.AsyncClient() as client:
         query = (
-            f"{SUPABASE_URL}/rest/v1/messages"
-            f"?id=eq.{message_id}"
-            f"&select=response"
+            f"{SUPABASE_URL}/rest/v1/responses"
+            f"?message_id=eq.{message_id}"
+            f"&select=agent_response"
         )
         resp = await client.get(query, headers=headers)
         try:
@@ -92,7 +92,7 @@ async def obtener_respuesta(message_id: str):
         if not isinstance(data, list) or not data:
             return JSONResponse(status_code=404, content={"status": "pending"})
 
-        respuesta = data[0].get("response")
+        respuesta = data[0].get("agent_response")
         if not respuesta:
             return JSONResponse(status_code=202, content={"status": "pending"})
 
