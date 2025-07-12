@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import httpx
 import os
@@ -101,3 +101,26 @@ async def form_post(
             "request": request,
             "respuesta": data[0].get("respuesta", "❓ Sin respuesta generada.")
         })
+
+@app.get("/respuesta")
+async def obtener_respuesta(message_id: str):
+    async with httpx.AsyncClient() as client:
+        query = (
+            f"{SUPABASE_URL}/rest/v1/messages"
+            f"?id=eq.{message_id}"
+            f"&select=response"
+        )
+        resp = await client.get(query, headers=headers)
+        try:
+            data = resp.json()
+        except Exception:
+            return JSONResponse(status_code=500, content={"status": "error", "message": "Respuesta no válida"})
+
+        if not isinstance(data, list) or not data:
+            return JSONResponse(status_code=404, content={"status": "pending"})
+
+        respuesta = data[0].get("response")
+        if not respuesta:
+            return JSONResponse(status_code=202, content={"status": "pending"})
+
+        return JSONResponse(status_code=200, content={"status": "ready", "respuesta": respuesta})
