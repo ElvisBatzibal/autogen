@@ -18,6 +18,7 @@ async def run_agents(request: TriggerRequest):
     try:
         # Ruta al archivo autogen_main.py
         print("Ejecutando el script de Autogen...")
+        print(f"Message ID recibido: {request.message_id}")
         autogen_script_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "agents", "autogen", "autogen_main.py")
         )
@@ -33,6 +34,14 @@ async def run_agents(request: TriggerRequest):
         print("Respuesta del script de Autogen:")
         print(result.stdout)
         print("Script ejecutado correctamente.")
+        # Validar si la salida contiene mensajes de error visibles
+        if "❌" in result.stdout or "error" in result.stdout.lower():
+            print("Se detectó un posible error en la salida del script.")
+            return JSONResponse(status_code=200, content={
+                "status": "error",
+                "output": result.stdout
+            })
+        
         return JSONResponse(status_code=200, content={
             "status": "success",
             "output": result.stdout
