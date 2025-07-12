@@ -87,7 +87,7 @@ async def save_response(message_id: str, response_text: str):
             }
         )
 
-async def run_response_agent_process():
+async def run_response_agent_process2():
     messages = await fetch_messages_without_response()
     print(f"💬 Mensajes sin respuesta: {len(messages)}")
 
@@ -110,8 +110,52 @@ async def run_response_agent_process():
 
         await save_response(msg["id"], response_text)
 
+async def run_response_agent_process():
+    messages = await fetch_messages_without_response()
+    print(f"💬 Mensajes sin respuesta: {len(messages)}")
+
+    results = []
+
+    for msg in messages:
+        print(f"\n📝 Mensaje: {msg['message']}")
+        order_id = next((word for word in msg["message"].split() if "ORD" in word), None)
+        if not order_id:
+            print("⚠️  No se pudo detectar un order_id en el mensaje.")
+            results.append({
+                "message_id": msg["id"],
+                "message": msg["message"],
+                "error": "No se detectó ningún código de pedido válido."
+            })
+            continue
+
+        order = await get_order(order_id.strip('#'))
+        if not order:
+            print(f"❌ Pedido {order_id} no encontrado.")
+            results.append({
+                "message_id": msg["id"],
+                "order_id": order_id,
+                "error": "Pedido no encontrado."
+            })
+            continue
+
+        prompt = build_prompt(order)
+        response_text = await generate_response(prompt)
+        print(f"✅ Respuesta generada:\n{response_text}\n")
+
+        await save_response(msg["id"], response_text)
+
+        results.append({
+            "message_id": msg["id"],
+            "order_id": order_id,
+            "respuesta": response_text
+        })
+
+    return results
+
 async def main():
-    await run_response_agent_process()
+    import json
+    result = await run_response_agent_process()
+    print(json.dumps(result, indent=4, ensure_ascii=False))
 
 if __name__ == "__main__":
     import asyncio

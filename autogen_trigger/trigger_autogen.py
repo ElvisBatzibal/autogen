@@ -3,13 +3,18 @@ from fastapi.responses import JSONResponse
 import subprocess
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
+
 load_dotenv()
+
+class TriggerRequest(BaseModel):
+    message_id: str
 
 app = FastAPI()
 
 
 @app.post("/run-agents")
-async def run_agents():
+async def run_agents(request: TriggerRequest):
     try:
         # Ruta al archivo autogen_main.py
         print("Ejecutando el script de Autogen...")
@@ -18,9 +23,9 @@ async def run_agents():
         )
         print(f"Ruta del script: {autogen_script_path}")
         print("Iniciando ejecución del script de Autogen...")
-        # Ejecutar el script autogen_main.py
+        # Ejecutar el script autogen_main.py con el message_id
         result = subprocess.run(
-            ["python", autogen_script_path],
+            ["python", autogen_script_path, request.message_id],
             capture_output=True,
             text=True,
             check=True
